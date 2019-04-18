@@ -3,8 +3,8 @@ app_name: sonarqube
 
 build:
   NAME: "{{ app_name }}"
-  SOURCE_REPOSITORY_URL: https://github.com/redhat-cop/containers-quickstarts.git
-  SOURCE_REPOSITORY_REF: master
+  SOURCE_REPOSITORY_URL: https://github.com/bvkin/containers-quickstarts.git
+  SOURCE_REPOSITORY_REF: sonar-template
   SOURCE_CONTEXT_DIR: "{{ app_name }}"
 postgresql:
   POSTGRESQL_DATABASE: sonar
@@ -47,6 +47,25 @@ openshift_cluster_content:
     template: "openshift//postgresql-persistent"
     params_from_vars: "{{ postgresql }}"
     namespace: "{{ namespace }}"
+    post_steps:
+    - role: galaxy/casl-ansible/roles/openshift-labels
+      vars:
+        target_namespace: "{{ namespace }}"
+        label: "app=sonarqube"
+        target_object: dc
+        target_name: sonardb
+    - role: galaxy/casl-ansible/roles/openshift-labels
+      vars:
+        target_namespace: "{{ namespace }}"
+        label: "app=sonarqube"
+        target_object: svc 
+        target_name: sonardb
+    - role: galaxy/casl-ansible/roles/openshift-labels
+      vars:
+        target_namespace: "{{ namespace }}"
+        label: "app=sonarqube"
+        target_object: secret
+        target_name: sonardb
     tags:
     - deploy
     - deploy-postgresql
