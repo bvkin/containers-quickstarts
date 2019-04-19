@@ -1,0 +1,42 @@
+---
+ansible_connection: local
+
+app_name: "pwm"
+namespace: "pwm"
+
+dev:
+  NAMESPACE: "{{ namespace }}"
+  NAMESPACE_DISPLAY_NAME: "{{ app_name }}"
+build:
+  NAME: "{{ app_name }}"
+  SOURCE_REPOSITORY_URL: https://github.com/bvkin/containers-quickstarts.git
+  SOURCE_REPOSITORY_REF: pwm
+  SOURCE_CONTEXT_DIR: "{{ app_name }}"
+deploy:
+  NAME: "{{ app_name }}"
+
+openshift_cluster_content:
+  - object: projectrequest
+    content:
+     - name: "{{ namespace }}-project"
+       template: "https://raw.githubusercontent.com/redhat-cop/cluster-lifecycle/v3.11.0/files/projectrequest/template.yml"
+       action: create
+       params_from_vars: "{{ dev }}"
+       tags:
+         - projectrequest
+  - object: Builds
+    content:
+    - name: "{{ app_name }}"
+      template: "{{ inventory_dir }}/../../build-docker-generic/.openshift/templates/docker-build-template.yml"
+      params_from_vars: "{{ build }}"
+      namespace: "{{ namespace }}"
+      tags:
+        - build
+  - object: app-deploy
+    content:
+      - name: "{{ app_name }}-deploy-{{ namespace }}"
+        template: "{{ inventory_dir }}/../templates/pwm/deploy.yml"
+        params_from_vars: "{{ deploy }}"
+        namespace: "{{ namespace }}"
+        tags:
+          - app-deploy
